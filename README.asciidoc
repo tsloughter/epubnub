@@ -8,6 +8,10 @@ README
 Quick Start
 -----------
 
+.Dependencies
+* iBrowse (faixen ia ibrowse or https://github.com/cmullaparthi/ibrowse)
+* Mochiweb (faxien ia mochiweb or https://github.com/mochi/mochiweb)
+
 -----------------------------------------------------------------------------------------------------------------------------------
         $ sinan shell
         Erlang R14B01 (erts-5.8.2) [source] [smp:2:2] [rq:2] [async-threads:0] [hipe] [kernel-poll:false]

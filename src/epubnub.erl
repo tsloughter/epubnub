@@ -9,6 +9,7 @@
 -module(epubnub).
 
 -export([publish/2,
+         spawn_subscribe/2,
          subscribe/2,
          history/2,
          time/0]).
@@ -30,6 +31,10 @@ publish(Channel, Msg) ->
     Json = mochijson2:encode(Msg),
     _Body = request([?ORIGIN, "publish", ?PUBKEY, ?SUBKEY, "0", Channel, "0", Json]).
 
+-spec spawn_subscribe(string(), pid() | fun()) -> ok.
+spawn_subscribe(Channel, Callback) ->
+    {ok, spawn(epubnub, subscribe, [Channel, Callback])}.
+
 -spec subscribe(string(), pid() | fun()) -> ok.
 subscribe(Channel, PID) when is_pid(PID) ->
     subscribe(Channel, fun(X) -> PID ! {message, X} end);
@@ -47,6 +52,10 @@ history(Channel, Limit) when is_list(Limit) ->
 -spec time() -> integer().
 time() ->
     hd(request([?ORIGIN, "time", "0"])).
+
+%%%===================================================================
+%%% Internal functions
+%%%===================================================================
 
 -spec request(list(string())) -> json_term().
 request(URLList) ->
