@@ -21,7 +21,9 @@
          subscribe/3,
          history/2,
          history/3,
-         time/0]).
+         time/0,
+         uuid/0,
+         uuid/1]).
 
 -define(ORIGIN, "pubsub.pubnub.com").
 -define(PUBKEY, "demo").
@@ -143,6 +145,19 @@ time() ->
 -spec time(record(epn)) -> integer().
 time(EPN) ->
     hd(request([EPN#epn.origin, "time", "0"], EPN#epn.is_ssl)).
+
+
+%%%===================================================================
+%%% UUID functions
+%%%===================================================================
+
+-spec uuid() -> binary().
+uuid() ->
+    uuid(new()).
+
+-spec uuid(record(epn)) -> binary().
+uuid(EPN) ->
+    hd(request(["pubnub-prod.appspot.com", "uuid"], EPN#epn.is_ssl)).
 
 %%%===================================================================
 %%% Internal functions
