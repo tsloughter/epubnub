@@ -49,10 +49,28 @@ Quick Start
 -----------------------------------------------------------------------------------------------------------------------------------
 
 Examples
-________
+--------
+
+src/epn_example_client has a simple example of a gen_server subscribing to a channel. The init function takes an EPN record,
+created with epubsub:new() in start_link and requests to subscribe to the "hello_world" channel and sends its PID with the
+self() function so new messages are sent to this process.
 
 -----------------------------------------------------------------------------------------------------------------------------------
 
-
+init([EPN]) ->
+    epubnub_sup:subscribe(EPN, "hello_world", self()),
+    {ok, #state{}}.
 
 -----------------------------------------------------------------------------------------------------------------------------------
+
+Since currently the subscribe loop sends the message with the bang (!) the gen_server will handle the new message in handle_info.
+The example simply prints out the contents of the message:
+
+-----------------------------------------------------------------------------------------------------------------------------------
+
+handle_info({message, Message}, State) ->
+    io:format("~p~n", [Message]),
+    {noreply, State}.
+
+-----------------------------------------------------------------------------------------------------------------------------------
+
