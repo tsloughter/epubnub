@@ -1,0 +1,44 @@
+// -*- mode: doc -*-
+
+README
+======
+:Author: Tristan Sloughter tristan.sloughter@gmail.com
+:website: http://wwww.erlware.org
+
+Quick Start
+-----------
+
+-----------------------------------------------------------------------------------------------------------------------------------
+        $ sinan shell
+        Erlang R14B01 (erts-5.8.2) [source] [smp:2:2] [rq:2] [async-threads:0] [hipe] [kernel-poll:false]
+
+        Eshell V5.8.2  (abort with ^G)
+        1> starting: depends
+        starting: build
+        Building /Users/tristan/Devel/epubnub/src/epubnub.erl
+        Building /Users/tristan/Devel/epubnub/src/epubnub_sup.erl
+        Building /Users/tristan/Devel/epubnub/src/epubnub_app.erl
+        starting: shell
+        Eshell V5.8.2  (abort with ^G)
+        1> epubnub:publish("hello_world", <<"hello">>).
+        [1,<<"D">>]
+        2> epubnub:history("hello_world", 10).
+        [<<"hello">>,<<"hello">>,<<"hello">>,<<"hello">>,
+         <<"hello">>,<<"hello">>,<<"hello">>,<<"hello">>,<<"hello">>,
+         <<"hello">>]
+        3> epubnub:time().
+        3588286186558
+        4> epubnub:subscribe("hello_world", fun(X) -> io:format("~p~n", [X]) end).
+        []
+        <<"3587954804488">>
+        []
+        <<"3587954804488">>
+        []
+        <<"3587954804488">>
+        []
+        <<"3587954804488">>
+
+        BREAK: (a)bort (c)ontinue (p)roc info (i)nfo (l)oaded
+               (v)ersion (k)ill (D)b-tables (d)istribution
+        a
+-----------------------------------------------------------------------------------------------------------------------------------
