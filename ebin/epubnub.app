@@ -5,7 +5,10 @@
    {vsn, "0.0.1"},
    {modules, [epubnub_app,
               epubnub_sup,
-              epubnub]},
+              epubnub,
+
+              epn_basic_examples,
+              epn_example_client]},
    {registered,[epubnub_sup]},
    {applications, [kernel, stdlib, mochiweb, ibrowse]},
    {mod, {epubnub_app,[]}},

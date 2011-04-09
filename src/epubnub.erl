@@ -8,15 +8,25 @@
 %%%-------------------------------------------------------------------
 -module(epubnub).
 
--export([publish/2,
+-export([new/0,
+         new/1,
+         new/2,
+         new/3,
+         publish/2,
+         publish/3,
          spawn_subscribe/2,
+         spawn_subscribe/3,
          subscribe/2,
+         subscribe/3,
          history/2,
+         history/3,
          time/0]).
 
 -define(ORIGIN, "pubsub.pubnub.com").
 -define(PUBKEY, "demo").
 -define(SUBKEY, "demo").
+
+-record(epn, {origin=?ORIGIN, pubkey=?PUBKEY, subkey=?SUBKEY}).
 
 -type json_string() :: atom | string() | binary().
 -type json_number() :: integer() | float().
@@ -24,34 +34,100 @@
 -type json_object() :: {struct, [{json_string(), json_term()}]}.
 -type json_term() :: json_string() | json_number() | json_array() | json_object().
 
+%%%===================================================================
+%%% New record functions
+%%%===================================================================
+
+-spec new() -> record(epn).
+new() ->
+    #epn{}.
+
+-spec new(string()) -> record(epn).
+new(Origin) ->
+    #epn{origin=Origin}.
+
+-spec new(string(), string()) -> record(epn).
+new(PubKey, SubKey) ->
+    #epn{pubkey=PubKey, subkey=SubKey}.
+
+-spec new(string(), string(), string()) -> record(epn).
+new(Origin, PubKey, SubKey) ->
+    #epn{origin=Origin, pubkey=PubKey, subkey=SubKey}.
+
+%%%===================================================================
+%%% Publish functions
+%%%===================================================================
+
 -spec publish(string(), string() | binary()) -> json_term().
-publish(Channel, Msg) when is_list(Msg) ->
-    publish(Channel, list_to_binary(Msg));
 publish(Channel, Msg) ->
+    publish(new(), Channel, Msg).
+
+-spec publish(record(epn), string(), string() | binary()) -> json_term().
+publish(EPN, Channel, Msg) when is_list(Msg) ->
+    publish(EPN, Channel, list_to_binary(Msg));
+publish(EPN, Channel, Msg) ->
     Json = mochijson2:encode(Msg),
-    _Body = request([?ORIGIN, "publish", ?PUBKEY, ?SUBKEY, "0", Channel, "0", Json]).
+    _Body = request([EPN#epn.origin, "publish", EPN#epn.pubkey, EPN#epn.subkey, "0", Channel, "0", Json]).
+
+%%%===================================================================
+%%% Spawn subscribe functions
+%%%===================================================================
 
 -spec spawn_subscribe(string(), pid() | fun()) -> ok.
 spawn_subscribe(Channel, Callback) ->
-    {ok, spawn(epubnub, subscribe, [Channel, Callback])}.
+    spawn_subscribe(new(), Channel, Callback).
+
+-spec spawn_subscribe(record(epn), string(), pid() | fun()) -> ok.
+spawn_subscribe(EPN, Channel, Callback) ->
+    {ok, spawn(epubnub, subscribe, [EPN, Channel, Callback])}.
+
+%%%===================================================================
+%%% Subscribe functions
+%%%===================================================================
 
 -spec subscribe(string(), pid() | fun()) -> ok.
-subscribe(Channel, PID) when is_pid(PID) ->
-    subscribe(Channel, fun(X) -> PID ! {message, X} end);
-subscribe(Channel, Function) ->
-    Messages = request([?ORIGIN, "subscribe", ?SUBKEY, Channel, "0", "0"]),
-    lists:foreach(Function, Messages),
-    subscribe(Channel, Function).
+subscribe(Channel, Callback)  ->
+    subscribe(new(), Channel, Callback).
+
+-spec subscribe(record(epn), string(), pid() | fun()) -> ok.
+subscribe(EPN, Channel, PID) when is_pid(PID) ->
+    io:format("~p~n", [PID]),
+    subscribe(EPN, Channel, fun(X) -> PID ! {message, X} end);
+subscribe(EPN, Channel, Function) ->
+    try
+        Messages = request([EPN#epn.origin, "subscribe", EPN#epn.subkey, Channel, "0", "0"]),
+        lists:foreach(Function, Messages),
+        subscribe(EPN, Channel, Function)
+    catch
+        _:_ ->
+            subscribe(EPN, Channel, Function)
+    end.
+
+%%%===================================================================
+%%% History functions
+%%%===================================================================
 
 -spec history(string(), integer() | string()) -> json_term().
-history(Channel, Limit) when is_integer(Limit) ->
-    history(Channel, integer_to_list(Limit));
-history(Channel, Limit) when is_list(Limit) ->
-    request([?ORIGIN, "history", ?SUBKEY, Channel, "0", Limit]).
+history(Channel, Limit) ->
+    history(new(), Channel, Limit).
+
+-spec history(record(epn), string(), integer() | string()) -> json_term().
+history(EPN, Channel, Limit) when is_integer(Limit) ->
+    history(EPN, Channel, integer_to_list(Limit));
+history(EPN, Channel, Limit) when is_list(Limit) ->
+    request([EPN#epn.origin, "history", EPN#epn.subkey, Channel, "0", Limit]).
+
+%%%===================================================================
+%%% Time functions
+%%%===================================================================
 
 -spec time() -> integer().
 time() ->
-    hd(request([?ORIGIN, "time", "0"])).
+    time(new()).
+
+-spec time(record(epn)) -> integer().
+time(EPN) ->
+    hd(request([EPN#epn.origin, "time", "0"])).
 
 %%%===================================================================
 %%% Internal functions

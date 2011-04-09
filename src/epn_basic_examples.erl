@@ -10,3 +10,6 @@ subscribe() ->
 
 history() ->
     epubnub:history("hello_world", 10).
+
+time() ->
+    epubnub:time().
