@@ -16,6 +16,7 @@
          publish/3,
          spawn_subscribe/2,
          spawn_subscribe/3,
+         unsubscribe/1,
          subscribe/2,
          subscribe/3,
          history/2,
@@ -81,6 +82,14 @@ spawn_subscribe(Channel, Callback) ->
 spawn_subscribe(EPN, Channel, Callback) ->
     {ok, spawn(epubnub, subscribe, [EPN, Channel, Callback])}.
 
+
+%%%===================================================================
+%%% Unsubscribe functions
+%%%===================================================================
+
+unsubscribe(PID) when is_pid(PID) ->
+    PID ! terminate.
+
 %%%===================================================================
 %%% Subscribe functions
 %%%===================================================================
@@ -96,7 +105,14 @@ subscribe(EPN, Channel, Function) ->
     try
         Messages = request([EPN#epn.origin, "subscribe", EPN#epn.subkey, Channel, "0", "0"], EPN#epn.is_ssl),
         lists:foreach(Function, Messages),
-        subscribe(EPN, Channel, Function)
+
+        %% Check if a terminate message has been sent to us, stop and return ok atom if so
+        receive
+            terminate ->
+                ok
+        after 0 ->
+                subscribe(EPN, Channel, Function)
+        end
     catch
         _:_ ->
             subscribe(EPN, Channel, Function)

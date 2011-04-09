@@ -9,7 +9,10 @@
 -behaviour(supervisor).
 
 %% API
--export([start_link/0, subscribe/2, subscribe/3]).
+-export([start_link/0,
+         subscribe/2,
+         subscribe/3,
+         unsubscribe/1]).
 
 %% Supervisor callbacks
 -export([init/1]).
@@ -29,6 +32,9 @@ subscribe(Channel, Callback) ->
 
 subscribe(EPN, Channel, Callback) ->
     supervisor:start_child(?SERVER, [EPN, Channel, Callback]).
+
+unsubscribe(PID) ->
+    epubnub:unsubscribe(PID).
 
 %%%===================================================================
 %%% Supervisor callbacks

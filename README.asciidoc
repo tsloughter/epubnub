@@ -58,8 +58,8 @@ self() function so new messages are sent to this process.
 -----------------------------------------------------------------------------------------------------------------------------------
 
 init([EPN]) ->
-    epubnub_sup:subscribe(EPN, "hello_world", self()),
-    {ok, #state{}}.
+    {ok, PID} = epubnub_sup:subscribe(EPN, "hello_world", self()),
+    {ok, #state{pid=PID}}.
 
 -----------------------------------------------------------------------------------------------------------------------------------
 
@@ -74,3 +74,20 @@ handle_info({message, Message}, State) ->
 
 -----------------------------------------------------------------------------------------------------------------------------------
 
+To unscribe we call the module stop function that sends an async stop message to the process. The handle_cast function handles this
+message and return stop telling the gen_server to go to terminate. In terminate we take the PID of the subscribed process to the
+epubnub unsubscribe function which sends it a terminate message and it exits.
+
+-----------------------------------------------------------------------------------------------------------------------------------
+
+stop() ->
+    gen_server:cast(?SERVER, stop).
+
+handle_cast(stop, State) ->
+    {stop, normal, State}.
+
+terminate(_Reason, #state{pid=PID}) ->
+    epubnub:unsubscribe(PID),
+    ok.
+
+-----------------------------------------------------------------------------------------------------------------------------------
