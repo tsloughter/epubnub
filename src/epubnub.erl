@@ -61,13 +61,11 @@ new(Origin, PubKey, SubKey) ->
 %%% Publish functions
 %%%===================================================================
 
--spec publish(string(), string() | binary()) -> json_term().
+-spec publish(string(), json_term()) -> json_term().
 publish(Channel, Msg) ->
     publish(new(), Channel, Msg).
 
--spec publish(record(epn), string(), string() | binary()) -> json_term().
-publish(EPN, Channel, Msg) when is_list(Msg) ->
-    publish(EPN, Channel, list_to_binary(Msg));
+-spec publish(record(epn), string(), json_term()) -> json_term().
 publish(EPN, Channel, Msg) ->
     Json = mochijson2:encode(Msg),
     _Body = request([EPN#epn.origin, "publish", EPN#epn.pubkey, EPN#epn.subkey, "0", Channel, "0", Json], EPN#epn.is_ssl).
