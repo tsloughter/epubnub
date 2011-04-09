@@ -10,7 +10,7 @@
               epn_basic_examples,
               epn_example_client]},
    {registered,[epubnub_sup]},
-   {applications, [kernel, stdlib, mochiweb, ibrowse]},
+   {applications, [kernel, stdlib, mochiweb, ibrowse, ssl]},
    {mod, {epubnub_app,[]}},
    {start_phases, []}]}.
 

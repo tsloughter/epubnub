@@ -26,7 +26,7 @@
 -define(PUBKEY, "demo").
 -define(SUBKEY, "demo").
 
--record(epn, {origin=?ORIGIN, pubkey=?PUBKEY, subkey=?SUBKEY}).
+-record(epn, {origin=?ORIGIN, pubkey=?PUBKEY, subkey=?SUBKEY, secretkey, is_ssl=false}).
 
 -type json_string() :: atom | string() | binary().
 -type json_number() :: integer() | float().
@@ -67,7 +67,7 @@ publish(EPN, Channel, Msg) when is_list(Msg) ->
     publish(EPN, Channel, list_to_binary(Msg));
 publish(EPN, Channel, Msg) ->
     Json = mochijson2:encode(Msg),
-    _Body = request([EPN#epn.origin, "publish", EPN#epn.pubkey, EPN#epn.subkey, "0", Channel, "0", Json]).
+    _Body = request([EPN#epn.origin, "publish", EPN#epn.pubkey, EPN#epn.subkey, "0", Channel, "0", Json], EPN#epn.is_ssl).
 
 %%%===================================================================
 %%% Spawn subscribe functions
@@ -91,11 +91,10 @@ subscribe(Channel, Callback)  ->
 
 -spec subscribe(record(epn), string(), pid() | fun()) -> ok.
 subscribe(EPN, Channel, PID) when is_pid(PID) ->
-    io:format("~p~n", [PID]),
     subscribe(EPN, Channel, fun(X) -> PID ! {message, X} end);
 subscribe(EPN, Channel, Function) ->
     try
-        Messages = request([EPN#epn.origin, "subscribe", EPN#epn.subkey, Channel, "0", "0"]),
+        Messages = request([EPN#epn.origin, "subscribe", EPN#epn.subkey, Channel, "0", "0"], EPN#epn.is_ssl),
         lists:foreach(Function, Messages),
         subscribe(EPN, Channel, Function)
     catch
@@ -115,7 +114,7 @@ history(Channel, Limit) ->
 history(EPN, Channel, Limit) when is_integer(Limit) ->
     history(EPN, Channel, integer_to_list(Limit));
 history(EPN, Channel, Limit) when is_list(Limit) ->
-    request([EPN#epn.origin, "history", EPN#epn.subkey, Channel, "0", Limit]).
+    request([EPN#epn.origin, "history", EPN#epn.subkey, Channel, "0", Limit], EPN#epn.is_ssl).
 
 %%%===================================================================
 %%% Time functions
@@ -127,14 +126,20 @@ time() ->
 
 -spec time(record(epn)) -> integer().
 time(EPN) ->
-    hd(request([EPN#epn.origin, "time", "0"])).
+    hd(request([EPN#epn.origin, "time", "0"], EPN#epn.is_ssl)).
 
 %%%===================================================================
 %%% Internal functions
 %%%===================================================================
 
--spec request(list(string())) -> json_term().
-request(URLList) ->
-    URL = string:join(["http:/" | URLList], "/"),
-    {ok, "200", _ResponseHeaders, Body} = ibrowse:send_req(URL, [], get, [], []),
+-spec request(list(string()), boolean()) -> json_term().
+request(URLList, IsSSL) ->
+    Protocol = case IsSSL of
+                   true ->
+                       "https:/";
+                   false ->
+                       "http:/"
+               end,
+    URL = string:join([Protocol | URLList], "/"),
+    {ok, "200", _ResponseHeaders, Body} = ibrowse:send_req(URL, [], get, [], [{is_ssl, IsSSL}]),
     mochijson2:decode(Body).
