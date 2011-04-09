@@ -10,7 +10,7 @@
 -behaviour(application).
 
 %% Application callbacks
--export([start/2, stop/1]).
+-export([start/2, stop/1, start_deps/0]).
 
 %%%===================================================================
 %%% Application callbacks
@@ -32,6 +32,12 @@ start(_StartType, _StartArgs) ->
 -spec stop(State::any()) -> ok.
 stop(_State) ->
     ok.
+
+start_deps() ->
+    application:start(mochiweb),
+    application:start(crypto),
+    application:start(public_key),
+    application:start(ssl).
 
 %%%===================================================================
 %%% Internal functions
