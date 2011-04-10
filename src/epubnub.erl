@@ -103,8 +103,12 @@ subscribe(EPN, Channel, PID) when is_pid(PID) ->
     subscribe(EPN, Channel, fun(X) -> PID ! {message, X} end);
 subscribe(EPN, Channel, Function) ->
     try
-        Messages = request([EPN#epn.origin, "subscribe", EPN#epn.subkey, Channel, "0", "0"], EPN#epn.is_ssl),
-        lists:foreach(Function, Messages),
+        case request([EPN#epn.origin, "subscribe", EPN#epn.subkey, Channel, "0", "0"], EPN#epn.is_ssl) of
+            [[], _TimeToken] ->
+                timeout;
+            [Messages, _TimeToken] ->
+                lists:foreach(Function, Messages)
+        end,
 
         %% Check if a terminate message has been sent to us, stop and return ok atom if so
         receive
@@ -170,5 +174,6 @@ request(URLList, IsSSL) ->
                        "http:/"
                end,
     URL = string:join([Protocol | URLList], "/"),
+    io:format("~p~n", [URL]),
     {ok, "200", _ResponseHeaders, Body} = ibrowse:send_req(URL, [], get, [], [{is_ssl, IsSSL}]),
     mochijson2:decode(Body).
