@@ -100,8 +100,11 @@ subscribe(Channel, Callback)  ->
 
 -spec subscribe(record(epn), string(), pid() | fun()) -> ok.
 subscribe(EPN, Channel, PID) when is_pid(PID) ->
-    subscribe(EPN, Channel, fun(X) -> PID ! {message, X} end, "0").
+    subscribe(EPN, Channel, fun(X) -> PID ! {message, X} end, "0");
+subscribe(EPN, Channel, Callback)  ->
+    subscribe(EPN, Channel, Callback, "0").
 
+-spec subscribe(record(epn), string(), fun(), string()) -> ok.
 subscribe(EPN, Channel, Function, TimeToken) ->
     try
         NewTimeToken = case request([EPN#epn.origin, "subscribe", EPN#epn.subkey, Channel, "0", TimeToken], EPN#epn.is_ssl) of
