@@ -87,6 +87,7 @@ spawn_subscribe(EPN, Channel, Callback) ->
 %%% Unsubscribe functions
 %%%===================================================================
 
+-spec unsubscribe(pid()) -> ok.
 unsubscribe(PID) when is_pid(PID) ->
     PID ! terminate.
 
