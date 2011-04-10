@@ -100,26 +100,28 @@ subscribe(Channel, Callback)  ->
 
 -spec subscribe(record(epn), string(), pid() | fun()) -> ok.
 subscribe(EPN, Channel, PID) when is_pid(PID) ->
-    subscribe(EPN, Channel, fun(X) -> PID ! {message, X} end);
-subscribe(EPN, Channel, Function) ->
+    subscribe(EPN, Channel, fun(X) -> PID ! {message, X} end, "0").
+
+subscribe(EPN, Channel, Function, TimeToken) ->
     try
-        case request([EPN#epn.origin, "subscribe", EPN#epn.subkey, Channel, "0", "0"], EPN#epn.is_ssl) of
-            [[], _TimeToken] ->
-                timeout;
-            [Messages, _TimeToken] ->
-                lists:foreach(Function, Messages)
-        end,
+        NewTimeToken = case request([EPN#epn.origin, "subscribe", EPN#epn.subkey, Channel, "0", TimeToken], EPN#epn.is_ssl) of
+                        [[], NewTimeToken1] ->
+                            NewTimeToken1;
+                        [Messages, NewTimeToken1] ->
+                            lists:foreach(Function, Messages),
+                            NewTimeToken1
+                    end,
 
         %% Check if a terminate message has been sent to us, stop and return ok atom if so
         receive
             terminate ->
                 ok
         after 0 ->
-                subscribe(EPN, Channel, Function)
+                subscribe(EPN, Channel, Function, NewTimeToken)
         end
     catch
         _:_ ->
-            subscribe(EPN, Channel, Function)
+            subscribe(EPN, Channel, Function, TimeToken)
     end.
 
 %%%===================================================================
@@ -174,6 +176,5 @@ request(URLList, IsSSL) ->
                        "http:/"
                end,
     URL = string:join([Protocol | URLList], "/"),
-    io:format("~p~n", [URL]),
     {ok, "200", _ResponseHeaders, Body} = ibrowse:send_req(URL, [], get, [], [{is_ssl, IsSSL}]),
     mochijson2:decode(Body).
