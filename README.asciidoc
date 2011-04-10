@@ -33,16 +33,8 @@ Quick Start
          <<"hello">>]
         3> epubnub:time().
         3588286186558
-        4> epubnub:subscribe("hello_world", fun(X) -> io:format("~p~n", [X]) end).
-        []
-        <<"3587954804488">>
-        []
-        <<"3587954804488">>
-        []
-        <<"3587954804488">>
-        []
-        <<"3587954804488">>
-
+        4> epubnub:subscribe("chat", fun(X) -> io:format("~p~n", [X]) end).
+        ....
         BREAK: (a)bort (c)ontinue (p)roc info (i)nfo (l)oaded
                (v)ersion (k)ill (D)b-tables (d)istribution
         a
