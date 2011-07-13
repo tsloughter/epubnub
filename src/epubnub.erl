@@ -102,7 +102,7 @@ subscribe(Channel, Callback)  ->
 -spec subscribe(record(epn), string(), pid() | fun()) -> ok.
 subscribe(EPN, Channel, PID) when is_pid(PID) ->
     subscribe(EPN, Channel, fun(X) -> PID ! {message, X} end, "0");
-subscribe(EPN, Channel, Callback)  ->
+subscribe(EPN, Channel, Callback) ->
     subscribe(EPN, Channel, Callback, "0").
 
 -spec subscribe(record(epn), string(), fun(), string()) -> ok.
@@ -114,7 +114,7 @@ subscribe(EPN, Channel, Function, TimeToken) ->
                         [Messages, NewTimeToken1] ->
                             lists:foreach(Function, Messages),
                             NewTimeToken1
-                    end,
+                       end,
 
         %% Check if a terminate message has been sent to us, stop and return ok atom if so
         receive

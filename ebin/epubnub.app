@@ -11,6 +11,9 @@
               epn_example_client]},
    {registered,[epubnub_sup]},
    {applications, [kernel, stdlib, mochiweb, ibrowse, ssl]},
+   {agner, [
+           {requires, ["mochiweb", "ibrowse"]}
+           ]},
    {mod, {epubnub_app,[]}},
    {start_phases, []}]}.
 
