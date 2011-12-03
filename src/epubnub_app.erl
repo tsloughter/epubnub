@@ -34,13 +34,14 @@ stop(_State) ->
     ok.
 
 start_deps() ->
-    application:start(mochiweb),
+    application:start(sasl),
+    application:start(inets),
     application:start(crypto),
+    application:start(mochiweb),
     application:start(public_key),
-    application:start(ssl).
+    application:start(ssl),
+    application:start(ibrowse).
 
 %%%===================================================================
 %%% Internal functions
 %%%===================================================================
-
-

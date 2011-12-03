@@ -25,11 +25,20 @@
          uuid/0,
          uuid/1]).
 
--define(ORIGIN, "pubsub.pubnub.com").
--define(PUBKEY, "demo").
--define(SUBKEY, "demo").
+-define(DEFAULT_ORIGIN, "pubsub.pubnub.com").
+-define(DEFAULT_PUBKEY, "demo").
+-define(DEFAULT_SUBKEY, "demo").
+-define(DEFAULT_SSL, false).
 
--record(epn, {origin=?ORIGIN, pubkey=?PUBKEY, subkey=?SUBKEY, secretkey, is_ssl=false}).
+-define(WITH_DEFAULT(X, Y), case X of
+                                undefined ->
+                                    {ok, Y};
+                                _ ->
+                                    X
+                            end).
+
+
+-record(epn, {origin, pubkey, subkey, secretkey, is_ssl}).
 
 -type json_string() :: atom | string() | binary().
 -type json_number() :: integer() | float().
@@ -43,7 +52,11 @@
 
 -spec new() -> record(epn).
 new() ->
-    #epn{}.
+    {ok, Origin} = ?WITH_DEFAULT(application:get_env(epubnub, origin), ?DEFAULT_ORIGIN),
+    {ok, PubKey} = ?WITH_DEFAULT(application:get_env(epubnub, pubkey), ?DEFAULT_PUBKEY),
+    {ok, SubKey} = ?WITH_DEFAULT(application:get_env(epubnub, subkey), ?DEFAULT_SUBKEY),
+    {ok, SSL} = ?WITH_DEFAULT(application:get_env(epubnub, ssl), ?DEFAULT_SSL),
+    #epn{origin=Origin, pubkey=PubKey, subkey=SubKey, is_ssl=SSL}.
 
 -spec new(string()) -> record(epn).
 new(Origin) ->
