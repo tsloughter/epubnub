@@ -1,7 +1,9 @@
 README
 ======
-:Author: Tristan Sloughter tristan.sloughter@gmail.com
-:website: http://wwww.erlware.org
+Author: Tristan Sloughter tristan.sloughter@gmail.com
+website: http://blog.rlware.org
+
+Version: 0.0.2
 
 Quick Start
 -----------
