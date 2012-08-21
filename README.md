@@ -1,7 +1,7 @@
 README
 ======
 Author: Tristan Sloughter tristan.sloughter@gmail.com
-website: http://blog.rlware.org
+website: http://blog.erlware.org
 
 Version: 0.0.2
 
