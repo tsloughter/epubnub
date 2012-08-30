@@ -42,7 +42,7 @@
                             end).
 
 
--record(epn, {origin, pubkey, subkey, secretkey, is_ssl}).
+-record(epn, {origin, pubkey, subkey, secretkey, is_ssl=false}).
 
 -type json_string() :: atom | string() | binary().
 -type json_number() :: integer() | float().
@@ -167,7 +167,7 @@ here_now(Channel) ->
 
 -spec here_now(record(epn), string()) -> json_term().
 here_now(EPN, Channel) ->
-    request([EPN#epn.origin, "here_now", EPN#epn.subkey, Channel], EPN#epn.is_ssl).
+    request([EPN#epn.origin, "v2", "presence", "sub-key", EPN#epn.subkey, "channel", Channel], EPN#epn.is_ssl).
 
 %%%===================================================================
 %%% History functions
@@ -197,7 +197,7 @@ time(EPN) ->
 
 
 %%%===================================================================
-%%% UUID functions
+%%% UID functions
 %%%===================================================================
 
 -spec uuid() -> binary().
