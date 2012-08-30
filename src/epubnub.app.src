@@ -1,0 +1,15 @@
+%% -*- erlang -*-
+{application, epubnub,
+ [{description, "Erlang PubNub API"},
+  {vsn, "0.0.2"},
+  {registered, [epubnub_sup]},
+  {applications, [
+                  kernel
+                  ,stdlib
+                  ,mochiweb
+                  ,ssl
+                  ,ibrowse        
+                 ]},
+  {mod, {epubnub_app, []}},
+  {start_phases, []}
+ ]}.

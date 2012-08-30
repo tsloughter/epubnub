@@ -19,6 +19,10 @@
          unsubscribe/1,
          subscribe/2,
          subscribe/3,
+         presence/2,         
+         presence/3,
+         here_now/1,
+         here_now/2,         
          history/2,
          history/3,
          time/0,
@@ -140,6 +144,30 @@ subscribe(EPN, Channel, Function, TimeToken) ->
         _:_ ->
             subscribe(EPN, Channel, Function, TimeToken)
     end.
+
+%%%===================================================================
+%%% Presence functions
+%%%===================================================================
+
+-spec presence(string(), pid() | fun()) -> json_term().
+presence(Channel, Callback) ->
+    presence(new(), Channel, Callback).
+
+-spec presence(record(epn), string(), pid() | fun()) -> json_term().
+presence(EPN, Channel, Callback) ->
+    subscribe(EPN, [Channel, "-pnpres"], Callback).
+
+%%%===================================================================
+%%% Here Now functions
+%%%===================================================================
+
+-spec here_now(string()) -> json_term().
+here_now(Channel) ->
+    here_now(new(), Channel).
+
+-spec here_now(record(epn), string()) -> json_term().
+here_now(EPN, Channel) ->
+    request([EPN#epn.origin, "here_now", EPN#epn.subkey, Channel], EPN#epn.is_ssl).
 
 %%%===================================================================
 %%% History functions

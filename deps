@@ -1,4 +1,0 @@
-#!/bin/bash
-
-agner install mochiweb
-agner install ibrowse
