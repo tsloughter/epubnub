@@ -37,10 +37,10 @@ start_deps() ->
     application:start(sasl),
     application:start(inets),
     application:start(crypto),
-    application:start(mochiweb),
+    application:start(jsx),
     application:start(public_key),
     application:start(ssl),
-    application:start(ibrowse).
+    application:start(hackney).
 
 %%%===================================================================
 %%% Internal functions

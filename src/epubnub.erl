@@ -12,6 +12,7 @@
          new/1,
          new/2,
          new/3,
+         new/4,
          publish/2,
          publish/3,
          spawn_subscribe/2,
@@ -27,11 +28,13 @@
          history/3,
          time/0,
          uuid/0,
+         request/3,
          uuid/1]).
 
--define(DEFAULT_ORIGIN, "pubsub.pubnub.com").
--define(DEFAULT_PUBKEY, "demo").
--define(DEFAULT_SUBKEY, "demo").
+-define(DEFAULT_ORIGIN, <<"pubsub.pubnub.com">>).
+-define(DEFAULT_PUBKEY, <<"demo">>).
+-define(DEFAULT_SUBKEY, <<"demo">>).
+-define(DEFAULT_SECRETKEY, <<"demo">>).
 -define(DEFAULT_SSL, false).
 
 -define(WITH_DEFAULT(X, Y), case X of
@@ -42,7 +45,7 @@
                             end).
 
 
--record(epn, {origin, pubkey, subkey, secretkey, is_ssl=false}).
+-record(epn, {origin, pubkey, subkey, secretkey, client, is_ssl=false}).
 
 -type json_string() :: atom | string() | binary().
 -type json_number() :: integer() | float().
@@ -59,8 +62,9 @@ new() ->
     {ok, Origin} = ?WITH_DEFAULT(application:get_env(epubnub, origin), ?DEFAULT_ORIGIN),
     {ok, PubKey} = ?WITH_DEFAULT(application:get_env(epubnub, pubkey), ?DEFAULT_PUBKEY),
     {ok, SubKey} = ?WITH_DEFAULT(application:get_env(epubnub, subkey), ?DEFAULT_SUBKEY),
+    {ok, SecretKey} = ?WITH_DEFAULT(application:get_env(epubnub, secretkey), ?DEFAULT_SECRETKEY),
     {ok, SSL} = ?WITH_DEFAULT(application:get_env(epubnub, ssl), ?DEFAULT_SSL),
-    #epn{origin=Origin, pubkey=PubKey, subkey=SubKey, is_ssl=SSL}.
+    #epn{origin=Origin, pubkey=PubKey, subkey=SubKey, secretkey=SecretKey, is_ssl=SSL}.
 
 -spec new(string()) -> record(epn).
 new(Origin) ->
@@ -71,8 +75,12 @@ new(PubKey, SubKey) ->
     #epn{pubkey=PubKey, subkey=SubKey}.
 
 -spec new(string(), string(), string()) -> record(epn).
-new(Origin, PubKey, SubKey) ->
-    #epn{origin=Origin, pubkey=PubKey, subkey=SubKey}.
+new(PubKey, SubKey, SecretKey) ->
+    #epn{pubkey=PubKey, subkey=SubKey, secretkey=SecretKey}.
+
+-spec new(string(), string(), string(), string()) -> record(epn).
+new(Origin, PubKey, SubKey, SecretKey) ->
+    #epn{origin=Origin, pubkey=PubKey, subkey=SubKey, secretkey=SecretKey}.
 
 %%%===================================================================
 %%% Publish functions
@@ -84,8 +92,10 @@ publish(Channel, Msg) ->
 
 -spec publish(record(epn), string(), json_term()) -> json_term().
 publish(EPN, Channel, Msg) ->
-    Json = mochijson2:encode(Msg),
-    _Body = request([EPN#epn.origin, "publish", EPN#epn.pubkey, EPN#epn.subkey, "0", Channel, "0", Json], EPN#epn.is_ssl).
+    Json = jsx:encode(Msg),
+    request(EPN#epn.client, [EPN#epn.origin, <<"publish">>, EPN#epn.pubkey,
+                             EPN#epn.subkey,  EPN#epn.secretkey, Channel, <<"0">>, Json],
+            EPN#epn.is_ssl).
 
 %%%===================================================================
 %%% Spawn subscribe functions
@@ -118,27 +128,29 @@ subscribe(Channel, Callback)  ->
 
 -spec subscribe(record(epn), string(), pid() | fun()) -> ok.
 subscribe(EPN, Channel, PID) when is_pid(PID) ->
-    subscribe(EPN, Channel, fun(X) -> PID ! {message, X} end, "0");
+    subscribe(EPN, Channel, fun(X) -> PID ! {message, X} end, <<"0">>);
 subscribe(EPN, Channel, Callback) ->
-    subscribe(EPN, Channel, Callback, "0").
+    subscribe(EPN, Channel, Callback, <<"0">>).
 
 -spec subscribe(record(epn), string(), fun(), string()) -> ok.
 subscribe(EPN, Channel, Function, TimeToken) ->
     try
-        NewTimeToken = case request([EPN#epn.origin, "subscribe", EPN#epn.subkey, Channel, "0", TimeToken], EPN#epn.is_ssl) of
-                        [[], NewTimeToken1] ->
-                            NewTimeToken1;
-                        [Messages, NewTimeToken1] ->
-                            lists:foreach(Function, Messages),
-                            NewTimeToken1
-                       end,
+        {[_, NewTimeToken], Client} = case request(EPN#epn.client, [EPN#epn.origin, <<"subscribe">>,
+                                                                    EPN#epn.subkey, Channel, <<"0">>, TimeToken],
+                                              EPN#epn.is_ssl) of
+                                          {[[], _], _} = Result ->
+                                              Result;
+                                          {[Messages, _], _} = Result ->
+                                              lists:foreach(Function, Messages),
+                                              Result
+                                      end,
 
         %% Check if a terminate message has been sent to us, stop and return ok atom if so
         receive
             terminate ->
                 ok
         after 0 ->
-                subscribe(EPN, Channel, Function, NewTimeToken)
+                subscribe(EPN#epn{client=Client}, Channel, Function, NewTimeToken)
         end
     catch
         _:_ ->
@@ -155,7 +167,7 @@ presence(Channel, Callback) ->
 
 -spec presence(record(epn), string(), pid() | fun()) -> json_term().
 presence(EPN, Channel, Callback) ->
-    subscribe(EPN, [Channel, "-pnpres"], Callback).
+    subscribe(EPN, [Channel, <<"-pnpres">>], Callback).
 
 %%%===================================================================
 %%% Here Now functions
@@ -167,7 +179,9 @@ here_now(Channel) ->
 
 -spec here_now(record(epn), string()) -> json_term().
 here_now(EPN, Channel) ->
-    request([EPN#epn.origin, "v2", "presence", "sub-key", EPN#epn.subkey, "channel", Channel], EPN#epn.is_ssl).
+    request(EPN#epn.client, [EPN#epn.origin, <<"v2">>, <<"presence">>, <<"sub-key">>,
+                             EPN#epn.subkey, <<"channel">>, Channel],
+            EPN#epn.is_ssl).
 
 %%%===================================================================
 %%% History functions
@@ -181,7 +195,9 @@ history(Channel, Limit) ->
 history(EPN, Channel, Limit) when is_integer(Limit) ->
     history(EPN, Channel, integer_to_list(Limit));
 history(EPN, Channel, Limit) when is_list(Limit) ->
-    request([EPN#epn.origin, "history", EPN#epn.subkey, Channel, "0", Limit], EPN#epn.is_ssl).
+    request(EPN#epn.client, [EPN#epn.origin, <<"history">>, EPN#epn.subkey,
+                             Channel, <<"0">>, Limit],
+            EPN#epn.is_ssl).
 
 %%%===================================================================
 %%% Time functions
@@ -193,7 +209,7 @@ time() ->
 
 -spec time(record(epn)) -> integer().
 time(EPN) ->
-    hd(request([EPN#epn.origin, "time", "0"], EPN#epn.is_ssl)).
+    hd(request(EPN#epn.client, [EPN#epn.origin, <<"time">>, <<"0">>], EPN#epn.is_ssl)).
 
 
 %%%===================================================================
@@ -206,20 +222,31 @@ uuid() ->
 
 -spec uuid(record(epn)) -> binary().
 uuid(EPN) ->
-    hd(request(["pubnub-prod.appspot.com", "uuid"], EPN#epn.is_ssl)).
+    hd(request(EPN#epn.client, [<<"pubnub-prod.appspot.com">>, <<"uuid">>], EPN#epn.is_ssl)).
 
 %%%===================================================================
 %%% Internal functions
 %%%===================================================================
 
--spec request(list(string()), boolean()) -> json_term().
-request(URLList, IsSSL) ->
-    Protocol = case IsSSL of
-                   true ->
-                       "https:/";
-                   false ->
-                       "http:/"
-               end,
-    URL = string:join([Protocol | URLList], "/"),
-    {ok, "200", _ResponseHeaders, Body} = ibrowse:send_req(URL, [], get, [], [{is_ssl, IsSSL}]),
-    mochijson2:decode(Body).
+-spec request(tuple(), list(string()), boolean()) -> json_term().
+request(Client, URLList, IsSSL) ->
+    case Client of
+        undefined ->
+            Protocol = case IsSSL of
+                           true ->
+                               <<"https:/">>;
+                           false ->
+                               <<"http:/">>
+                       end,
+            URL = bin_join([Protocol | URLList], <<"/">>),
+            {ok, 200, _RespHeaders, Client1} = hackney:request(get, URL, [], <<>>, []);
+        Client ->
+            Path = bin_join([<<"/">> | tl(URLList)], <<"/">>),
+            {ok, 200, _RespHeaders, Client1} = hackney:send_request(Client, {get, Path, [], <<>>})
+    end,
+
+    {ok, Body, Client2} = hackney:body(Client1),
+    {jsx:decode(Body), Client2}.
+
+bin_join([H | Rest], BinString) ->    
+    << H/binary, << <<BinString/binary, B/binary>>  || B <- Rest >>/binary >>.

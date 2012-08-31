@@ -6,9 +6,9 @@
   {applications, [
                   kernel
                   ,stdlib
-                  ,mochiweb
                   ,ssl
-                  ,ibrowse        
+                  ,jsx
+                  ,hackney
                  ]},
   {mod, {epubnub_app, []}},
   {start_phases, []}
