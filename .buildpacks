@@ -1,2 +1,2 @@
-https://github.com/tsloughter/heroku-buildpack-erlang-dialyzer.git
 https://github.com/heroku/heroku-buildpack-ruby.git
+https://github.com/tsloughter/heroku-buildpack-erlang-dialyzer.git
