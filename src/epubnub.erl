@@ -20,10 +20,10 @@
          unsubscribe/1,
          subscribe/2,
          subscribe/3,
-         presence/2,         
+         presence/2,
          presence/3,
          here_now/1,
-         here_now/2,         
+         here_now/2,
          history/2,
          history/3,
          time/0,
@@ -66,19 +66,19 @@ new() ->
     {ok, SSL} = ?WITH_DEFAULT(application:get_env(epubnub, ssl), ?DEFAULT_SSL),
     #epn{origin=Origin, pubkey=PubKey, subkey=SubKey, secretkey=SecretKey, is_ssl=SSL}.
 
--spec new(string()) -> record(epn).
+-spec new(binary()) -> record(epn).
 new(Origin) ->
     #epn{origin=Origin}.
 
--spec new(string(), string()) -> record(epn).
+-spec new(binary(), binary()) -> record(epn).
 new(PubKey, SubKey) ->
     #epn{pubkey=PubKey, subkey=SubKey}.
 
--spec new(string(), string(), string()) -> record(epn).
+-spec new(binary(), binary(), binary()) -> record(epn).
 new(PubKey, SubKey, SecretKey) ->
     #epn{pubkey=PubKey, subkey=SubKey, secretkey=SecretKey}.
 
--spec new(string(), string(), string(), string()) -> record(epn).
+-spec new(binary(), binary(), binary(), binary()) -> record(epn).
 new(Origin, PubKey, SubKey, SecretKey) ->
     #epn{origin=Origin, pubkey=PubKey, subkey=SubKey, secretkey=SecretKey}.
 
@@ -122,17 +122,17 @@ unsubscribe(PID) when is_pid(PID) ->
 %%% Subscribe functions
 %%%===================================================================
 
--spec subscribe(string(), pid() | fun()) -> ok.
+-spec subscribe(binary(), pid() | fun()) -> ok.
 subscribe(Channel, Callback)  ->
     subscribe(new(), Channel, Callback).
 
--spec subscribe(record(epn), string(), pid() | fun()) -> ok.
+-spec subscribe(record(epn), binary(), pid() | fun()) -> ok.
 subscribe(EPN, Channel, PID) when is_pid(PID) ->
     subscribe(EPN, Channel, fun(X) -> PID ! {message, X} end, <<"0">>);
 subscribe(EPN, Channel, Callback) ->
     subscribe(EPN, Channel, Callback, <<"0">>).
 
--spec subscribe(record(epn), string(), fun(), string()) -> ok.
+-spec subscribe(record(epn), binary(), fun(), binary()) -> ok.
 subscribe(EPN, Channel, Function, TimeToken) ->
     try
         {[_, NewTimeToken], Client} = case request(EPN#epn.client, [EPN#epn.origin, <<"subscribe">>,
@@ -161,11 +161,11 @@ subscribe(EPN, Channel, Function, TimeToken) ->
 %%% Presence functions
 %%%===================================================================
 
--spec presence(string(), pid() | fun()) -> json_term().
+-spec presence(binary(), pid() | fun()) -> json_term().
 presence(Channel, Callback) ->
     presence(new(), Channel, Callback).
 
--spec presence(record(epn), string(), pid() | fun()) -> json_term().
+-spec presence(record(epn), binary(), pid() | fun()) -> json_term().
 presence(EPN, Channel, Callback) ->
     subscribe(EPN, [Channel, <<"-pnpres">>], Callback).
 
@@ -173,11 +173,11 @@ presence(EPN, Channel, Callback) ->
 %%% Here Now functions
 %%%===================================================================
 
--spec here_now(string()) -> json_term().
+-spec here_now(binary()) -> json_term().
 here_now(Channel) ->
     here_now(new(), Channel).
 
--spec here_now(record(epn), string()) -> json_term().
+-spec here_now(record(epn), binary()) -> json_term().
 here_now(EPN, Channel) ->
     request(EPN#epn.client, [EPN#epn.origin, <<"v2">>, <<"presence">>, <<"sub-key">>,
                              EPN#epn.subkey, <<"channel">>, Channel],
@@ -187,11 +187,11 @@ here_now(EPN, Channel) ->
 %%% History functions
 %%%===================================================================
 
--spec history(string(), integer() | string()) -> json_term().
+-spec history(binary(), integer() | binary()) -> json_term().
 history(Channel, Limit) ->
     history(new(), Channel, Limit).
 
--spec history(record(epn), string(), integer() | string()) -> json_term().
+-spec history(record(epn), binary(), integer() | binary()) -> json_term().
 history(EPN, Channel, Limit) when is_integer(Limit) ->
     history(EPN, Channel, integer_to_list(Limit));
 history(EPN, Channel, Limit) when is_list(Limit) ->
@@ -228,7 +228,7 @@ uuid(EPN) ->
 %%% Internal functions
 %%%===================================================================
 
--spec request(tuple(), list(string()), boolean()) -> json_term().
+-spec request(tuple(), list(binary()), boolean()) -> json_term().
 request(Client, URLList, IsSSL) ->
     case Client of
         undefined ->
@@ -248,5 +248,5 @@ request(Client, URLList, IsSSL) ->
     {ok, Body, Client2} = hackney:body(Client1),
     {jsx:decode(Body), Client2}.
 
-bin_join([H | Rest], BinString) ->    
+bin_join([H | Rest], BinString) ->
     << H/binary, << <<BinString/binary, B/binary>>  || B <- Rest >>/binary >>.

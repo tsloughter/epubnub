@@ -8,45 +8,35 @@ Version: 0.0.4
 Quick Start
 -----------
 
-.Dependencies
-
-Install agner (http://erlagner.org/):
+* Dependencies
 
 ```bash
-$ curl https://raw.github.com/agner/agner/master/scripts/oneliner | sh
+$ ./rebar get-deps
 ```
 
+* Compile
+
 ```bash
-$ ./deps
+$ ./rebar compile
 ```
 
-```bash
-        $ ./sinan shell
-        Erlang R14B01 (erts-5.8.2) [source] [smp:2:2] [rq:2] [async-threads:0] [hipe] [kernel-poll:false]
+* Test
 
-        Eshell V5.8.2  (abort with ^G)
-        1> starting: depends
-        starting: build
-        Building /Users/tristan/Devel/epubnub/src/epubnub.erl
-        Building /Users/tristan/Devel/epubnub/src/epubnub_sup.erl
-        Building /Users/tristan/Devel/epubnub/src/epubnub_app.erl
-        starting: shell
-        Eshell V5.8.2  (abort with ^G)
-        1> epubnub_app:start_deps().
-        ok
-        2> epubnub:publish("hello_world", <<"hello">>).
-        [1,<<"D">>]
-        3> epubnub:history("hello_world", 10).
-        [<<"hello">>,<<"hello">>,<<"hello">>,<<"hello">>,
-         <<"hello">>,<<"hello">>,<<"hello">>,<<"hello">>,<<"hello">>,
-         <<"hello">>]
-        3> epubnub:time().
-        3588286186558
-        4> epubnub:subscribe("chat", fun(X) -> io:format("~p~n", [X]) end).
-        ....
-        BREAK: (a)bort (c)ontinue (p)roc info (i)nfo (l)oaded
-               (v)ersion (k)ill (D)b-tables (d)istribution
-        a
+```bash
+$ erl +K true +A30 -pa ebin -env ERL_LIBS lib:deps -config config/sys.config
+Erlang R15B03 (erts-5.9.3.1) [source] [smp:4:4] [async-threads:30] [hipe] [kernel-poll:true]
+
+Eshell V5.9.3.1  (abort with ^G)
+1> epubnub_app:start_deps().
+ok
+2> epubnub:publish(<<"hello_world">>, <<"hello">>).
+{[1,<<"Sent">>,<<"13612809348896246">>],
+ {client,hackney_tcp_transport,"pubsub.pubnub.com",80,netloc,
+         [],#Port<0.2131>,infinity,false,5,false,nil,undefined,
+         connected,done,nil,normal,#Fun<hackney_request.send.2>,done,
+         4096,<<>>,
+         {1,1},
+         30,nil,<<"keep-ali"...>>,<<"text"...>>}}
 ```
 
 Examples
@@ -59,7 +49,7 @@ self() function so new messages are sent to this process.
 ```erlang
 
 init([EPN]) ->
-    {ok, PID} = epubnub_sup:subscribe(EPN, "hello_world", self()),
+    {ok, PID} = epubnub_sup:subscribe(EPN, <<"hello_world">>, self()),
     {ok, #state{pid=PID}}.
 
 ```
