@@ -1,7 +1,7 @@
 %% -*- erlang -*-
 {application, epubnub,
  [{description, "Erlang PubNub API"},
-  {vsn, "0.0.4"},
+  {vsn, "0.0.5"},
   {registered, [epubnub_sup]},
   {applications, [
                   kernel
