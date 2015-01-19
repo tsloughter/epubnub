@@ -1,33 +1,24 @@
 README
 ======
-Author: Tristan Sloughter tristan.sloughter@gmail.com
+Author: Tristan Sloughter t@crashfast.com
 website: http://blog.erlware.org
 
-Version: 0.0.4
+Version: 0.1.0
 
 Quick Start
 -----------
 
-* Dependencies
+* Build
 
 ```bash
-$ ./rebar get-deps
-```
-
-* Compile
-
-```bash
-$ ./rebar compile
+$ ./rebar3 compile
 ```
 
 * Test
 
 ```bash
-$ erl +K true +A30 -pa ebin -env ERL_LIBS lib:deps -config config/sys.config
-Erlang R15B03 (erts-5.9.3.1) [source] [smp:4:4] [async-threads:30] [hipe] [kernel-poll:true]
-
-Eshell V5.9.3.1  (abort with ^G)
-1> epubnub_app:start_deps().
+$ ./rebar3 shell
+1> application:ensure_all_started(epubnub).
 ok
 2> epubnub:publish(<<"hello_world">>, <<"hello">>).
 {[1,<<"Sent">>,<<"13612809348896246">>],

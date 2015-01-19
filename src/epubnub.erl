@@ -245,8 +245,8 @@ request(Client, URLList, IsSSL) ->
             {ok, 200, _RespHeaders, Client1} = hackney:send_request(Client, {get, Path, [], <<>>})
     end,
 
-    {ok, Body, Client2} = hackney:body(Client1),
-    {jsx:decode(Body), Client2}.
+    {ok, Body} = hackney:body(Client1),
+    {jsx:decode(Body), Client1}.
 
 bin_join([H | Rest], BinString) ->
     << H/binary, << <<BinString/binary, B/binary>>  || B <- Rest >>/binary >>.
