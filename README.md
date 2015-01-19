@@ -21,13 +21,7 @@ $ ./rebar3 shell
 1> application:ensure_all_started(epubnub).
 ok
 2> epubnub:publish(<<"hello_world">>, <<"hello">>).
-{[1,<<"Sent">>,<<"13612809348896246">>],
- {client,hackney_tcp_transport,"pubsub.pubnub.com",80,netloc,
-         [],#Port<0.2131>,infinity,false,5,false,nil,undefined,
-         connected,done,nil,normal,#Fun<hackney_request.send.2>,done,
-         4096,<<>>,
-         {1,1},
-         30,nil,<<"keep-ali"...>>,<<"text"...>>}}
+{[1,<<"Sent">>,<<"13612809348896246">>]}
 ```
 
 Examples
