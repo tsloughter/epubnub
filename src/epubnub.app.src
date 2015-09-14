@@ -1,7 +1,7 @@
 %% -*- erlang -*-
 {application, epubnub,
  [{description, "Erlang PubNub API"},
-  {vsn, "git"},
+  {vsn, "0.1.0"},
   {registered, [epubnub_sup]},
   {applications, [
                   kernel
@@ -11,5 +11,7 @@
                   ,hackney
                  ]},
   {mod, {epubnub_app, []}},
-  {start_phases, []}
+  {contributors, ["Tristan Sloughter"]},
+  {licenses, ["LGPL"]},
+  {links, [{"Github", "https://github.com/tsloughter/epubnub"}]}
  ]}.
