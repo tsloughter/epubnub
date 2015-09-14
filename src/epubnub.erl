@@ -57,7 +57,7 @@
 %%% New record functions
 %%%===================================================================
 
--spec new() -> record(epn).
+-spec new() -> #epn{}.
 new() ->
     {ok, Origin} = ?WITH_DEFAULT(application:get_env(epubnub, origin), ?DEFAULT_ORIGIN),
     {ok, PubKey} = ?WITH_DEFAULT(application:get_env(epubnub, pubkey), ?DEFAULT_PUBKEY),
@@ -66,19 +66,19 @@ new() ->
     {ok, SSL} = ?WITH_DEFAULT(application:get_env(epubnub, ssl), ?DEFAULT_SSL),
     #epn{origin=Origin, pubkey=PubKey, subkey=SubKey, secretkey=SecretKey, is_ssl=SSL}.
 
--spec new(binary()) -> record(epn).
+-spec new(binary()) -> #epn{}.
 new(Origin) ->
     #epn{origin=Origin}.
 
--spec new(binary(), binary()) -> record(epn).
+-spec new(binary(), binary()) -> #epn{}.
 new(PubKey, SubKey) ->
     #epn{pubkey=PubKey, subkey=SubKey}.
 
--spec new(binary(), binary(), binary()) -> record(epn).
+-spec new(binary(), binary(), binary()) -> #epn{}.
 new(PubKey, SubKey, SecretKey) ->
     #epn{pubkey=PubKey, subkey=SubKey, secretkey=SecretKey}.
 
--spec new(binary(), binary(), binary(), binary()) -> record(epn).
+-spec new(binary(), binary(), binary(), binary()) -> #epn{}.
 new(Origin, PubKey, SubKey, SecretKey) ->
     #epn{origin=Origin, pubkey=PubKey, subkey=SubKey, secretkey=SecretKey}.
 
@@ -90,7 +90,7 @@ new(Origin, PubKey, SubKey, SecretKey) ->
 publish(Channel, Msg) ->
     publish(new(), Channel, Msg).
 
--spec publish(record(epn), string(), json_term()) -> json_term().
+-spec publish(#epn{}, string(), json_term()) -> json_term().
 publish(EPN, Channel, Msg) ->
     Json = jsx:encode(Msg),
     request(EPN#epn.client, [EPN#epn.origin, <<"publish">>, EPN#epn.pubkey,
@@ -105,7 +105,7 @@ publish(EPN, Channel, Msg) ->
 spawn_subscribe(Channel, Callback) ->
     spawn_subscribe(new(), Channel, Callback).
 
--spec spawn_subscribe(record(epn), string(), pid() | fun()) -> ok.
+-spec spawn_subscribe(#epn{}, string(), pid() | fun()) -> ok.
 spawn_subscribe(EPN, Channel, Callback) ->
     {ok, spawn(epubnub, subscribe, [EPN, Channel, Callback])}.
 
@@ -126,13 +126,13 @@ unsubscribe(PID) when is_pid(PID) ->
 subscribe(Channel, Callback)  ->
     subscribe(new(), Channel, Callback).
 
--spec subscribe(record(epn), binary(), pid() | fun()) -> ok.
+-spec subscribe(#epn{}, binary(), pid() | fun()) -> ok.
 subscribe(EPN, Channel, PID) when is_pid(PID) ->
     subscribe(EPN, Channel, fun(X) -> PID ! {message, X} end, <<"0">>);
 subscribe(EPN, Channel, Callback) ->
     subscribe(EPN, Channel, Callback, <<"0">>).
 
--spec subscribe(record(epn), binary(), fun(), binary()) -> ok.
+-spec subscribe(#epn{}, binary(), fun(), binary()) -> ok.
 subscribe(EPN, Channel, Function, TimeToken) ->
     try
         {[_, NewTimeToken], Client} = case request(EPN#epn.client, [EPN#epn.origin, <<"subscribe">>,
@@ -165,7 +165,7 @@ subscribe(EPN, Channel, Function, TimeToken) ->
 presence(Channel, Callback) ->
     presence(new(), Channel, Callback).
 
--spec presence(record(epn), binary(), pid() | fun()) -> json_term().
+-spec presence(#epn{}, binary(), pid() | fun()) -> json_term().
 presence(EPN, Channel, Callback) ->
     subscribe(EPN, [Channel, <<"-pnpres">>], Callback).
 
@@ -177,7 +177,7 @@ presence(EPN, Channel, Callback) ->
 here_now(Channel) ->
     here_now(new(), Channel).
 
--spec here_now(record(epn), binary()) -> json_term().
+-spec here_now(#epn{}, binary()) -> json_term().
 here_now(EPN, Channel) ->
     request(EPN#epn.client, [EPN#epn.origin, <<"v2">>, <<"presence">>, <<"sub-key">>,
                              EPN#epn.subkey, <<"channel">>, Channel],
@@ -191,7 +191,7 @@ here_now(EPN, Channel) ->
 history(Channel, Limit) ->
     history(new(), Channel, Limit).
 
--spec history(record(epn), binary(), integer() | binary()) -> json_term().
+-spec history(#epn{}, binary(), integer() | binary()) -> json_term().
 history(EPN, Channel, Limit) when is_integer(Limit) ->
     history(EPN, Channel, integer_to_list(Limit));
 history(EPN, Channel, Limit) when is_list(Limit) ->
@@ -207,7 +207,7 @@ history(EPN, Channel, Limit) when is_list(Limit) ->
 time() ->
     time(new()).
 
--spec time(record(epn)) -> integer().
+-spec time(#epn{}) -> integer().
 time(EPN) ->
     hd(request(EPN#epn.client, [EPN#epn.origin, <<"time">>, <<"0">>], EPN#epn.is_ssl)).
 
@@ -220,7 +220,7 @@ time(EPN) ->
 uuid() ->
     uuid(new()).
 
--spec uuid(record(epn)) -> binary().
+-spec uuid(#epn{}) -> binary().
 uuid(EPN) ->
     hd(request(EPN#epn.client, [<<"pubnub-prod.appspot.com">>, <<"uuid">>], EPN#epn.is_ssl)).
 
