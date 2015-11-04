@@ -241,7 +241,7 @@ request(Client, URLList, IsSSL) ->
             [Host | Rest] = URLList,
             Path = bin_join([<<"/">> | Rest], <<"/">>),
             URL = <<Protocol/binary, Host/binary>>,
-            {ok, NewClient} = hackney:connect(URL),
+            {ok, NewClient} = hackney:connect(URL, [{recv_timeout, infinity}]),
             {ok, 200, _RespHeaders, Client1} = hackney:send_request(NewClient, {get, Path, [], <<>>});
         Client ->
             Path = bin_join([<<"/">> | tl(URLList)], <<"/">>),
