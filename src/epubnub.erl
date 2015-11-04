@@ -234,12 +234,15 @@ request(Client, URLList, IsSSL) ->
         undefined ->
             Protocol = case IsSSL of
                            true ->
-                               <<"https:/">>;
+                               <<"https://">>;
                            false ->
-                               <<"http:/">>
+                               <<"http://">>
                        end,
-            URL = bin_join([Protocol | URLList], <<"/">>),
-            {ok, 200, _RespHeaders, Client1} = hackney:request(get, URL, [], <<>>, []);
+            [Host | Rest] = URLList,
+            Path = bin_join([<<"/">> | Rest], <<"/">>),
+            URL = <<Protocol/binary, Host/binary>>,
+            {ok, NewClient} = hackney:connect(URL, [{recv_timeout, infinity}]),
+            {ok, 200, _RespHeaders, Client1} = hackney:send_request(NewClient, {get, Path, [], <<>>});
         Client ->
             Path = bin_join([<<"/">> | tl(URLList)], <<"/">>),
             {ok, 200, _RespHeaders, Client1} = hackney:send_request(Client, {get, Path, [], <<>>})
