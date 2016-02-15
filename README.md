@@ -10,14 +10,16 @@ Quick Start
 
 * Build
 
+Install [rebar3](http://www.rebar3.org/docs/getting-started).
+
 ```bash
-$ ./rebar3 compile
+$ rebar3 compile
 ```
 
 * Test
 
 ```bash
-$ ./rebar3 shell
+$ rebar3 shell
 1> application:ensure_all_started(epubnub).
 ok
 2> epubnub:publish(<<"hello_world">>, <<"hello">>).
