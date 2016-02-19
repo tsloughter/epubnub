@@ -45,7 +45,7 @@ stop() ->
 
 %% @private
 init([EPN]) ->
-    {ok, PID} = epubnub_sup:subscribe(EPN, "hello_world", self()),
+    {ok, PID} = epubnub_sup:subscribe(EPN, <<"hello_world">>, self()),
     {ok, #state{pid=PID}}.
 
 %% @private

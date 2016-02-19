@@ -1,2 +1,5 @@
+.rebar3
+deps/
 _build/
 ebin/
+.depsolver_plt
