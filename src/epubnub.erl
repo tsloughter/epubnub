@@ -195,9 +195,9 @@ history(Channel, Limit) ->
 history(EPN, Channel, Limit) when is_integer(Limit) ->
     history(EPN, Channel, integer_to_list(Limit));
 history(EPN, Channel, Limit) when is_list(Limit) ->
-    request(EPN#epn.client, [EPN#epn.origin, <<"history">>, EPN#epn.subkey,
-                             Channel, <<"0">>, Limit],
-            EPN#epn.is_ssl).
+request(EPN#epn.client, [EPN#epn.origin, <<"history">>, EPN#epn.subkey,
+                            Channel, <<"0">>, list_to_binary(Limit)],
+             EPN#epn.is_ssl).
 
 %%%===================================================================
 %%% Time functions
@@ -239,17 +239,29 @@ request(Client, URLList, IsSSL) ->
                                <<"http://">>
                        end,
             [Host | Rest] = URLList,
-            Path = bin_join([<<"/">> | Rest], <<"/">>),
+            
+            Path = binary_join([<<"/">>,binary_join(Rest,<<"/">>)],<<>>),
             URL = <<Protocol/binary, Host/binary>>,
             {ok, NewClient} = hackney:connect(URL, [{recv_timeout, infinity}]),
             {ok, 200, _RespHeaders, Client1} = hackney:send_request(NewClient, {get, Path, [], <<>>});
         Client ->
-            Path = bin_join([<<"/">> | tl(URLList)], <<"/">>),
+            Path = binary_join([<<"/">>,binary_join(tl(URLList),<<"/">>)],<<>>),
             {ok, 200, _RespHeaders, Client1} = hackney:send_request(Client, {get, Path, [], <<>>})
     end,
 
-    {ok, Body} = hackney:body(Client1),
+    {ok, Body} = hackney:body(Client1),        
     {jsx:decode(Body), Client1}.
 
-bin_join([H | Rest], BinString) ->
-    << H/binary, << <<BinString/binary, B/binary>>  || B <- Rest >>/binary >>.
+
+-spec binary_join([binary()], binary()) -> binary().
+binary_join([], _Sep) ->
+  <<>>;
+binary_join([Part], _Sep) ->
+  Part;
+binary_join(List, Sep) ->
+  lists:foldr(fun (A, B) ->
+    if
+      bit_size(B) > 0 -> <<A/binary, Sep/binary, B/binary>>;
+      true -> A
+    end
+  end, <<>>, List).
