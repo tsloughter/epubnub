@@ -195,13 +195,6 @@ history(Channel, Limit) ->
 history(EPN, Channel, Limit) when is_integer(Limit) ->
     history(EPN, Channel, integer_to_list(Limit));
 history(EPN, Channel, Limit) when is_list(Limit) ->
-%     request(EPN#epn.client, [EPN#epn.origin, <<"history">>, EPN#epn.subkey,
-%                              Channel, <<"0">>, list_to_binary(Limit)],
-%             EPN#epn.is_ssl);
-% history(EPN, Channel, Limit) when is_binary(Limit) ->
-%     request(EPN#epn.client, [EPN#epn.origin, <<"history">>, EPN#epn.subkey,
-%                              Channel, <<"0">>, Limit],
-%             EPN#epn.is_ssl).
 request(EPN#epn.client, [EPN#epn.origin, <<"history">>, EPN#epn.subkey,
                             Channel, <<"0">>, list_to_binary(Limit)],
              EPN#epn.is_ssl).
@@ -248,7 +241,6 @@ request(Client, URLList, IsSSL) ->
             [Host | Rest] = URLList,
             
             Path = binary_join([<<"/">>,binary_join(Rest,<<"/">>)],<<>>),
-            io:format("Path~p~n",[Path]),
             URL = <<Protocol/binary, Host/binary>>,
             {ok, NewClient} = hackney:connect(URL, [{recv_timeout, infinity}]),
             {ok, 200, _RespHeaders, Client1} = hackney:send_request(NewClient, {get, Path, [], <<>>});
