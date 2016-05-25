@@ -24,6 +24,20 @@ $ rebar3 shell
 ok
 2> epubnub:publish(<<"hello_world">>, <<"hello">>).
 {[1,<<"Sent">>,<<"13612809348896246">>]}
+
+Examples to publish / see history on channels other than default channels, define a record epn as under (or can be abstracted)
+3> rd(epn, {origin, pubkey, subkey, secretkey, client, is_ssl}).
+epn
+4>  EPN = #epn{origin= <<"pubsub.pubnub.com">>, pubkey = <<"pub-abcd">>, subkey = <<"sub-abcd">>,secretkey= <<"sec-abcd">>,is_ssl=false}.
+#epn{origin = <<"pubsub.pubnub.com">>,
+     pubkey = <<"pub-abcd">>,
+     subkey = <<"sub-abcd">>,
+     secretkey = <<"sec-abcd">>,
+     client = undefined,is_ssl = false}
+5> erpubnub:publish(EPN,<<"channel_name">>,<<"message">>).
+{[1,<<"Sent">>,<<"12345566.....">>],#Ref<0.0.0.1234>}
+6> epubnub:history(EPN,<<"channel_name">>,1).
+{[<<"message">>],#Ref<0.0.0.2403>}
 ```
 
 Examples
